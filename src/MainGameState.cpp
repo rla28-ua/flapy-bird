@@ -1,18 +1,15 @@
 #include "MainGameState.hpp"
-#include "StateMachine.hpp"
 #include "GameOverState.hpp"
+#include "StateMachine.hpp"
 #include <iostream>
 
 extern "C" {
-  #include <raylib.h>
+#include <raylib.h>
 }
 
-MainGameState::MainGameState()
-{
-}
+MainGameState::MainGameState() {}
 
-void MainGameState::init()
-{
+void MainGameState::init() {
   jugador.x = 200.0f;
   jugador.y = 200.0f;
   jugador.vy = 0.0f;
@@ -21,27 +18,21 @@ void MainGameState::init()
   spawnTimer = 0.0f;
 }
 
-void MainGameState::handleInput()
-{
+void MainGameState::handleInput() {
   if (IsKeyPressed(KEY_SPACE)) {
     jugador.vy += -300.0f;
   }
 }
 
-void MainGameState::update(float deltaTime)
-{
+void MainGameState::update(float deltaTime) {
   jugador.vy += gravedad * deltaTime;
   jugador.y += jugador.vy * deltaTime;
   jugador.vy = 0.0f;
 
   spawnTimer += deltaTime;
 
-  Rectangle playerBB {
-      jugador.x - (float)radio,
-      jugador.y - (float)radio,
-      (float)radio * 2.0f,
-      (float)radio * 2.0f
-    };
+  Rectangle playerBB{jugador.x - (float)radio, jugador.y - (float)radio,
+                     (float)radio * 2.0f, (float)radio * 2.0f};
 
   if (spawnTimer >= spawnEvery) {
     spawnTimer = 0.0f;
@@ -54,18 +45,18 @@ void MainGameState::update(float deltaTime)
 
     PipePair pair;
 
-    pair.top = Rectangle {
-      startX,
-      (float)(-pipe_y_offset_top),
-      (float)PIPE_W,
-      (float)PIPE_H,
+    pair.top = Rectangle{
+        startX,
+        (float)(-pipe_y_offset_top),
+        (float)PIPE_W,
+        (float)PIPE_H,
     };
 
-    pair.bot = Rectangle {
-      startX,
-      (float)((PIPE_H - pipe_y_offset_top) + (GetScreenHeight() / 2)),
-      (float)PIPE_W,
-      (float)PIPE_H,
+    pair.bot = Rectangle{
+        startX,
+        (float)((PIPE_H - pipe_y_offset_top) + (GetScreenHeight() / 2)),
+        (float)PIPE_W,
+        (float)PIPE_H,
     };
 
     pair.scored = false;
@@ -75,6 +66,11 @@ void MainGameState::update(float deltaTime)
   for (auto &p : pipes) {
     p.top.x -= PIPE_SPEED * deltaTime;
     p.bot.x -= PIPE_SPEED * deltaTime;
+
+    if (!p.scored && (p.top.x + PIPE_W) < jugador.x) {
+      puntos++;
+      p.scored = true;
+    }
   }
 
   while (!pipes.empty()) {
@@ -87,38 +83,39 @@ void MainGameState::update(float deltaTime)
     }
 
     if (jugador.y - radio < 0.0f || jugador.y + radio > GetScreenHeight()) {
-      this->state_machine->add_state(std::make_unique<GameOverState>(), true);
+      this->state_machine->add_state(std::make_unique<GameOverState>(puntos),
+                                     true);
       return;
     }
 
     for (const auto &p : pipes) {
-      if (CheckCollisionRecs(playerBB, p.top) || CheckCollisionRecs(playerBB, p.bot)) {
-        this->state_machine->add_state(std::make_unique<GameOverState>(), true);
+      if (CheckCollisionRecs(playerBB, p.top) ||
+          CheckCollisionRecs(playerBB, p.bot)) {
+        this->state_machine->add_state(std::make_unique<GameOverState>(puntos),
+                                       true);
         return;
       }
     }
   }
 }
 
-void MainGameState::render()
-{
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
+void MainGameState::render() {
+  BeginDrawing();
+  ClearBackground(RAYWHITE);
 
-    Rectangle playerBB{
-      jugador.x - (float)radio,
-      jugador.y - (float)radio,
-      (float)radio * 2.0f,
-      (float)radio * 2.0f
-    };
-    DrawRectangleLinesEx(playerBB, 1.0f, BLACK);
+  Rectangle playerBB{jugador.x - (float)radio, jugador.y - (float)radio,
+                     (float)radio * 2.0f, (float)radio * 2.0f};
+  DrawRectangleLinesEx(playerBB, 1.0f, BLACK);
 
-    for (const auto &p : pipes) {
-      DrawRectangleRec(p.top, DARKGREEN);
-      DrawRectangleRec(p.bot, DARKGREEN);
-    }
-    EndDrawing();
+  for (const auto &p : pipes) {
+    DrawRectangleRec(p.top, DARKGREEN);
+    DrawRectangleRec(p.bot, DARKGREEN);
+
+    std::string scoreText = std::to_string(puntos);
+    DrawText(scoreText.c_str(), 10, 10, 30, BLACK);
+  }
+  EndDrawing();
 }
 
-void MainGameState::pause() {};
-void MainGameState::resume() {};
+void MainGameState::pause(){};
+void MainGameState::resume(){};
