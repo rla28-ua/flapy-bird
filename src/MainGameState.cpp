@@ -10,6 +10,15 @@ extern "C" {
 MainGameState::MainGameState() {}
 
 void MainGameState::init() {
+  birdSprite = LoadTexture("assets/sprites/yellowbird-midflap.png");
+  pipeSprite = LoadTexture("assets/sprites/pipe-green.png");
+
+  jugador.width = birdSprite.width;
+  jugador.height = birdSprite.height;
+
+  PIPE_W = (float)pipeSprite.width;
+  PIPE_H = (float)pipeSprite.height;
+
   jugador.x = 200.0f;
   jugador.y = 200.0f;
   jugador.vy = 0.0f;
@@ -31,8 +40,9 @@ void MainGameState::update(float deltaTime) {
 
   spawnTimer += deltaTime;
 
-  Rectangle playerBB{jugador.x - (float)radio, jugador.y - (float)radio,
-                     (float)radio * 2.0f, (float)radio * 2.0f};
+  Rectangle playerBB{jugador.x - jugador.width * 0.5f,
+                     jugador.y - jugador.height * 0.5f, (float)jugador.width,
+                     (float)jugador.height};
 
   if (spawnTimer >= spawnEvery) {
     spawnTimer = 0.0f;
@@ -82,7 +92,8 @@ void MainGameState::update(float deltaTime) {
       break;
     }
 
-    if (jugador.y - radio < 0.0f || jugador.y + radio > GetScreenHeight()) {
+    if (jugador.y - jugador.height * 0.5f < 0.0f ||
+        jugador.y + jugador.height * 0.5f > GetScreenHeight()) {
       this->state_machine->add_state(std::make_unique<GameOverState>(puntos),
                                      true);
       return;
@@ -103,13 +114,13 @@ void MainGameState::render() {
   BeginDrawing();
   ClearBackground(RAYWHITE);
 
-  Rectangle playerBB{jugador.x - (float)radio, jugador.y - (float)radio,
-                     (float)radio * 2.0f, (float)radio * 2.0f};
-  DrawRectangleLinesEx(playerBB, 1.0f, BLACK);
+  DrawTexture(birdSprite, (int)(jugador.x - jugador.width * 0.5f),
+              (int)(jugador.y - jugador.height * 0.5f), WHITE);
 
   for (const auto &p : pipes) {
-    DrawRectangleRec(p.top, DARKGREEN);
-    DrawRectangleRec(p.bot, DARKGREEN);
+    DrawTextureEx(pipeSprite, {p.top.x + PIPE_W, p.top.y + PIPE_H}, 180.0f,
+                  1.0f, WHITE);
+    DrawTextureEx(pipeSprite, {p.bot.x, p.bot.y}, 0.0f, 1.0f, WHITE);
 
     std::string scoreText = std::to_string(puntos);
     DrawText(scoreText.c_str(), 10, 10, 30, BLACK);

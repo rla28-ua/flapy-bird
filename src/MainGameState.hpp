@@ -10,6 +10,8 @@ struct Bird {
   float x;
   float y;
   float vy;
+  int width;
+  int height;
 };
 
 struct PipePair {
@@ -40,8 +42,12 @@ private:
 
   std::deque<PipePair> pipes;
   float spawnTimer = 0.0f;
-  static constexpr float spawnEvery = 1.75f;
-  static constexpr int PIPE_W = 32;
-  static constexpr int PIPE_H = 320;
-  static constexpr float PIPE_SPEED = 120.0f;
+  float spawnEvery = 1.75f;
+  float PIPE_W = 0.0f;
+  float PIPE_H = 0.0f;
+  float PIPE_SPEED = 120.0f;
+  float GAP_ALTURA = 4.5f;
+  
+  Texture2D birdSprite{};
+  Texture2D pipeSprite{};
 };
